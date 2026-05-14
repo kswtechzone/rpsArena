@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { useSocket } from '@/hooks/useSocket';
 
@@ -16,6 +16,28 @@ export default function HomeScreen() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBtn, setShowInstallBtn] = useState(false);
+
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBtn(true);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setShowInstallBtn(false);
+    }
+    setDeferredPrompt(null);
+  };
 
   const ACHIEVEMENT_LABELS = {
     first_win: { icon: '🏆', text: 'First Victory' },
@@ -98,8 +120,18 @@ export default function HomeScreen() {
         className="animate-fade-in-up"
         style={{ textAlign: 'center', marginBottom: '40px' }}
       >
-        <div style={{ fontSize: '80px', lineHeight: 1, marginBottom: '16px' }}>
-          🪨 📄 ✂️
+        <div style={{ marginBottom: '16px' }}>
+          <img 
+            src="/logo.png" 
+            alt="RPS Arena Logo" 
+            style={{ 
+              width: '160px', 
+              height: '160px', 
+              borderRadius: '30px', 
+              boxShadow: '0 0 40px rgba(168,85,247,0.3)',
+              border: '2px solid rgba(255,255,255,0.1)'
+            }} 
+          />
         </div>
         <h1
           className="text-gradient"
